@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Управление бизнес-единицами</title>
+<style>
+:root{
+  --bg:#EFF3FA; --card:#FFFFFF; --ink:#1B2233; --gray:#5F6A82; --lgray:#949DB2;
+  --accent:#2456C0; --accent-d:#1B4399; --accent-bg:#E8EEFB;
+  --target:#0E7FA6; --target-bg:#E9F4F8;
+  --danger:#C0392B; --danger-bg:#FBEDEA;
+  --hair:#E6EAF2; --line:#D8DEEC; --editbg:#EBF1FC;
+  --sh-sm:0 2px 8px rgba(20,35,80,.06); --sh-md:0 6px 20px rgba(20,35,80,.08); --sh-lg:0 14px 34px rgba(20,35,80,.13);
+  --r-sm:10px; --r-md:14px; --r-lg:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.5;font-size:15px}
+button{font:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px 70px}
+
+/* ---------- topbar ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(239,243,250,.88);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--hair)}
+.tb-in{max-width:1240px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;letter-spacing:-.01em;cursor:pointer}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#4E86E8);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;flex:none}
+.tabs{display:flex;gap:4px;margin-left:6px}
+.tab{border:none;background:none;padding:7px 14px;border-radius:9px;font-size:13.5px;font-weight:650;
+  color:var(--gray);cursor:pointer;transition:.13s}
+.tab:hover{background:#fff;color:var(--ink)}
+.tab.on{background:var(--accent);color:#fff}
+.tb-sp{flex:1}
+.tb-actions{display:flex;gap:8px}
+
+/* ---------- generic ---------- */
+.kicker{font-size:11.5px;font-weight:750;letter-spacing:.14em;color:var(--lgray);text-transform:uppercase}
+h1{font-size:31px;margin:6px 0 6px;font-weight:800;letter-spacing:-.02em}
+h1 .a{color:var(--accent)}
+.sub{color:var(--gray);font-size:15px;margin:0 0 18px;max-width:760px}
+.pagehead{padding-top:26px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:var(--r-sm);padding:8px 14px;
+  font-size:13px;font-weight:650;color:var(--ink);cursor:pointer;transition:.13s;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:#B9C4DC;box-shadow:var(--sh-sm)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-d)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--gray)}
+.btn.ghost:hover{background:#fff;color:var(--ink);box-shadow:none}
+
+/* ---------- dashboard stats ---------- */
+.sec-h{font-size:11.5px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:var(--lgray);margin:26px 0 12px;
+  display:flex;align-items:center;gap:10px}
+.sec-h:after{content:"";flex:1;height:1px;background:var(--hair)}
+.dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+.stat{background:#fff;border-radius:var(--r-md);padding:14px 16px;box-shadow:var(--sh-sm);cursor:pointer;
+  border:1.5px solid transparent;transition:.13s;position:relative}
+.stat:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+.stat.active{border-color:var(--accent)}
+.stat b{display:block;font-size:27px;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.stat b small{font-size:14px;font-weight:700;color:var(--lgray)}
+.stat.bad b{color:var(--danger)} .stat.good b{color:var(--target)} .stat.neut b{color:var(--ink)} .stat.acc b{color:var(--accent)}
+.stat span{font-size:12px;color:var(--gray);display:block;margin-top:4px;line-height:1.35}
+.dash-note{font-size:11.5px;color:var(--lgray);margin:8px 0 0}
+
+/* ---------- controls ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 16px}
+.search{position:relative;flex:1;min-width:220px;max-width:340px}
+.search input{width:100%;border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 12px 9px 34px;
+  font:inherit;font-size:13.5px;background:#fff;color:var(--ink)}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(36,86,192,.13)}
+.search .ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--lgray);font-size:14px;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:12.5px;
+  font-weight:600;color:var(--gray);cursor:pointer;transition:.13s;white-space:nowrap}
+.chip:hover{border-color:#B9C4DC;color:var(--ink)}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+select.sort{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;font:inherit;font-size:13px;
+  font-weight:600;background:#fff;color:var(--ink);cursor:pointer}
+select.sort:focus{outline:none;border-color:var(--accent)}
+.count-note{font-size:12.5px;color:var(--lgray);margin:-6px 0 12px}
+
+/* ---------- cards grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:16px}
+.mini{background:var(--card);border-radius:var(--r-lg);padding:20px 20px 16px;cursor:pointer;
+  box-shadow:var(--sh-sm);transition:transform .14s,box-shadow .14s;position:relative;
+  display:flex;flex-direction:column;border:1px solid rgba(230,234,242,.7)}
+.mini:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
+.mini .idx{position:absolute;top:15px;right:17px;font-size:11px;font-weight:700;color:var(--lgray);letter-spacing:.04em}
+.mini h3{color:var(--ink);margin:0 0 3px;font-size:18.5px;font-weight:800;letter-spacing:-.01em;padding-right:46px}
+.mini .val{font-size:15px;font-weight:750;color:var(--accent);margin:0 0 10px;min-height:20px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:11px}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.badge.share{background:var(--accent-bg);color:var(--accent)}
+.badge.share.min{background:#FDF3E4;color:#B07714}
+.badge.sale{background:var(--danger-bg);color:var(--danger)}
+.badge.empty{background:#F1F2F6;color:var(--lgray)}
+.mini .row{font-size:12.5px;color:var(--gray);margin:1px 0}
+.mini .row b{color:var(--ink);font-weight:650}
+.mini .strat{margin-top:9px;font-size:12.5px;color:var(--gray);line-height:1.4;flex:1}
+.mini .govbar{margin-top:13px;border-top:1px solid var(--hair);padding-top:11px;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;font-size:11.5px;color:var(--gray)}
+.pips{display:flex;gap:4px}
+.pip{width:16px;height:5px;border-radius:3px;background:#E3E7F0}
+.pip.c{background:#8FA8D9}.pip.t{background:var(--target)}
+.empty-res{padding:40px 0;text-align:center;color:var(--lgray);font-size:14px}
+
+/* ---------- detail ---------- */
+.back{display:inline-flex;align-items:center;gap:7px;color:var(--gray);font-size:13.5px;
+  font-weight:650;cursor:pointer;border:none;background:none;padding:6px 0;margin:18px 0 2px}
+.back:hover{color:var(--accent)}
+.dhead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin:2px 0 10px}
+.dhead h2{color:var(--accent);font-size:28px;margin:2px 0 0;font-weight:800;letter-spacing:-.02em}
+.edithint{font-size:12.5px;color:var(--lgray);margin:0 0 16px}
+.edithint b{color:var(--gray)}
+.panel{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:24px 26px;border:1px solid rgba(230,234,242,.7)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px 32px}
+.layout{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;align-items:start}
+.sec h4{font-size:14.5px;margin:0 0 10px;font-weight:800;display:flex;align-items:center;gap:8px}
+.sec h4:before{content:"";width:4px;height:15px;border-radius:2px;background:var(--accent)}
+.kv{font-size:13.5px;margin:4px 0;color:var(--gray)}
+.kv b{color:var(--ink)}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--lgray);margin:12px 0 4px}
+.strategy{color:var(--accent);font-weight:700;font-size:15px;margin:5px 0}
+.divider{height:1px;background:var(--hair);margin:16px 0;grid-column:1 / -1}
+.ed{border-radius:5px;padding:1px 4px;margin:0 -2px;transition:background .12s;cursor:text;outline:none}
+.ed:hover{background:var(--editbg)}
+.ed:focus{background:#fff;box-shadow:0 0 0 2px rgba(36,86,192,.30)}
+.ed:empty:before{content:attr(data-ph);color:#C3C9D6}
+ul.elist{list-style:none;padding:0;margin:6px 0 0}
+.eli{position:relative;display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13.5px}
+.eli .bullet{color:var(--accent);font-weight:700;flex:none}
+.eli .etext{flex:1}
+.del{border:none;background:none;color:var(--lgray);cursor:pointer;font-size:16px;line-height:1;
+  padding:0 2px;opacity:0;transition:.12s;flex:none}
+.eli:hover .del,.epair:hover .del{opacity:1}.del:hover{color:var(--danger)}
+.add{display:inline-block;margin-top:7px;font-size:12.5px;color:var(--accent);cursor:pointer;
+  font-weight:700;border:none;background:none;padding:2px 0}
+.add:hover{color:var(--accent-d)}
+.epair{display:flex;gap:8px;align-items:baseline;margin:4px 0}
+.epair .epl{flex:1;font-size:12.5px;color:var(--gray)}
+.epair .epv{font-weight:750;color:var(--ink);font-size:13.5px;white-space:nowrap}
+
+/* governance table */
+.gov h4{font-size:14.5px;margin:0 0 4px;font-weight:800}
+.gov .hint{font-size:12.5px;color:var(--lgray);font-style:italic;margin-bottom:14px}
+table.gov-t{width:100%;border-collapse:collapse}
+table.gov-t th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gray);
+  font-weight:750;text-align:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.gov-t th.t{color:var(--target)}
+table.gov-t td{padding:8px 6px;vertical-align:middle;border-bottom:1px solid var(--hair)}
+table.gov-t td.lab{font-weight:700;font-size:13px;width:32%}
+.col-target{background:var(--target-bg)}
+input.cell,select.cell{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 9px;
+  font:inherit;font-size:13px;background:#fff;color:var(--ink)}
+input.cell::placeholder{color:#C2C7D4}
+input.cell:focus,select.cell:focus,textarea.note:focus{outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(36,86,192,.13)}
+.legend{margin-top:16px;font-size:12.5px;color:var(--gray)}
+.legend ol{margin:4px 0 0;padding-left:19px}.legend li{margin:3px 0}
+.lh{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--lgray);font-weight:750}
+.note{width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  font:inherit;font-size:13.5px;background:#fff;color:var(--ink);resize:vertical;margin-top:8px}
+.savebar{margin-top:16px;font-size:12.5px;color:var(--lgray)}
+
+/* ---------- matrix ---------- */
+.mx-wrap{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-md);padding:6px 0 2px;overflow-x:auto;
+  border:1px solid rgba(230,234,242,.7)}
+table.mx{width:100%;border-collapse:collapse;min-width:980px}
+table.mx th{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--gray);font-weight:750;
+  text-align:left;padding:12px 12px 9px;border-bottom:2px solid var(--line);white-space:nowrap;position:sticky;top:0;background:#fff}
+table.mx th.c{text-align:center}
+table.mx td{padding:9px 12px;border-bottom:1px solid var(--hair);font-size:13px;vertical-align:middle}
+table.mx tr.row:hover td{background:#F6F9FE;cursor:pointer}
+table.mx td.name{font-weight:750;color:var(--accent);white-space:nowrap}
+table.mx td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.mx td.c{text-align:center}
+.cellchip{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:11.5px;font-weight:650;padding:3px 9px;border-radius:999px;vertical-align:middle}
+.cellchip.no{background:var(--danger-bg);color:var(--danger)}
+.cellchip.yes{background:#EAF5EF;color:#1E7C4D}
+.cellchip.tg{background:var(--target-bg);color:var(--target)}
+.prgcell{display:flex;align-items:center;gap:8px;min-width:90px}
+.prgbar{flex:1;height:6px;border-radius:4px;background:#EDF0F6;overflow:hidden}
+.prgbar i{display:block;height:100%;border-radius:4px;background:var(--target)}
+.mx-note{font-size:12px;color:var(--lgray);margin:10px 2px 0}
+.mx-toggle{display:flex;gap:4px;background:#fff;border:1px solid var(--line);border-radius:var(--r-sm);padding:3px}
+.mx-toggle button{border:none;background:none;border-radius:7px;padding:6px 13px;font-size:12.5px;font-weight:650;
+  color:var(--gray);cursor:pointer}
+.mx-toggle button.on{background:var(--accent);color:#fff}
+
+/* ---------- analytics ---------- */
+.an-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+.an-grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.chart-h{font-size:14px;font-weight:800;margin:0 0 3px}
+.chart-sub{font-size:12px;color:var(--lgray);margin:0 0 15px}
+.hbar{display:grid;grid-template-columns:150px 1fr 92px;gap:8px;align-items:center;margin:5px 0;font-size:12.5px}
+.hbar .nm{font-weight:650;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.hbar .nm:hover{color:var(--accent)}
+.hbar .tr{height:15px;border-radius:5px;background:#EDF0F6;overflow:hidden}
+.hbar .tr i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),#5B8CE8);min-width:2px}
+.hbar .vl{text-align:right;font-variant-numeric:tabular-nums;color:var(--gray);font-weight:650;white-space:nowrap}
+.donut-box{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.dleg{font-size:13px;flex:1;min-width:170px}
+.dleg .li{display:flex;align-items:center;gap:9px;margin:7px 0;color:var(--gray)}
+.dleg .sw{width:11px;height:11px;border-radius:4px;flex:none}
+.dleg b{color:var(--ink)}
+.covrow{margin:12px 0}
+.covrow .cl{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;color:var(--gray)}
+.covrow .cl b{color:var(--ink)}
+.covtr{height:9px;border-radius:5px;background:#EDF0F6;overflow:hidden;display:flex}
+.covtr .cur{background:var(--accent);height:100%}
+.covtr .tgt{background:var(--target);height:100%;opacity:.45}
+.an-note{font-size:12px;color:var(--lgray);margin-top:14px}
+
+/* ---------- misc ---------- */
+#toast{position:fixed;right:18px;bottom:18px;background:var(--ink);color:#fff;padding:10px 16px;
+  border-radius:10px;font-size:13px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:99}
+#toast.show{opacity:1;transform:translateY(0)}
+.foot{margin-top:34px;color:var(--lgray);font-size:12px}
+@media(max-width:900px){.layout,.cols,.an-grid,.an-grid2{grid-template-columns:1fr}.tb-in{gap:10px}}
+@media print{
+  .topbar,.controls,.back,.savebar,#toast,.foot,.del,.add,.mx-toggle,.dash-note,.count-note{display:none!important}
+  body{background:#fff}
+  .panel,.mx-wrap,.stat{box-shadow:none;border:1px solid #ddd}
+  .ed:hover{background:none}
+  table.mx th{position:static}
+}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="tb-in">
+  <div class="brand" onclick="location.hash=''"><div class="logo">БЕ</div>Портфель бизнес-единиц</div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="tb-sp"></div>
+  <div class="tb-actions">
+    <button class="btn ghost" onclick="doExport()" title="Скачать резервную копию всех правок (JSON)">↓ Экспорт</button>
+    <button class="btn ghost" onclick="document.getElementById('imp').click()" title="Загрузить сохранённые данные">↑ Импорт</button>
+    <input id="imp" type="file" accept="application/json" style="display:none" onchange="doImport(event)">
+    <button class="btn ghost" onclick="window.print()">Печать</button>
+  </div>
+</div></div>
+
+<div class="wrap" id="app"></div>
+<div id="toast">Сохранено</div>
+
+<script>
+'use strict';
+const CARDS = [{"name": "Томез", "date": "20.02.2025", "share": "70", "status": ["Формирование складской программы под будущие контракты", "Инвестиции в развитие"], "invested": [["Безнал", "2 329 798 025"], ["Нал", "150 914 749"]], "fin": [["Приведённая стоимость (безнал+нал)", "2 801 824 066"], ["Плановое финансирование до конца года", "322 220 810"], ["Плановый фин. результат 2026 г", "672 772 097"]], "problems": ["Согласование с партнёрами возмещения понесённых и софинансирования плановых расходов", "Отсутствие контрактной базы (кроме Москвы)", "Отсутствие опыта по 44-ФЗ"], "strategy": ["Продажа актива"]}, {"name": "ТВЗ", "date": "2019 г.", "share": "100", "status": ["Регистрация прав"], "invested": [["Безнал", "411 097 654"], ["Нал", "365 364 407"]], "fin": [["Приведённая стоимость (безнал+нал)", "1 091 112 662"], ["Минимальный объём финансирования до конца года", "41 000 000"], ["Плановый фин. результат 2026 г", "—"]], "problems": ["Снятие арестов с актива", "Отсутствие эффективной бизнес-модели", "Потребность в финансировании"], "strategy": ["Запуск производства", "Продажа актива"]}, {"name": "ЕСО", "date": "07.06.2024", "share": "", "status": ["Организация возобновления добычи", "Переговоры с консультантами по продаже"], "invested": [["Безнал", "1 601 552 999"], ["Нал", "356 411 175"]], "fin": [["Приведённая стоимость (безнал+нал)", "2 422 746 538"], ["Объём финансирования до конца года", "737 911 109"], ["Плановый фин. результат 2026 г", "−319 840 000"]], "problems": ["Сложно прогнозируемая финансовая модель", "Принять решение о дополнительных инвестициях", "Необходимо решение по покупке Комсомольского"], "strategy": ["Запуск добычи и продажа актива", "Заморозка проекта и продажа актива"]}, {"name": "Киргизия", "date": "15.01.2024", "share": "", "status": [], "invested": [["Безнал и нал", "1 488 697 755"]], "fin": [["Приведённая стоимость (безнал+нал)", "2 036 501 194"]], "problems": [], "strategy": ["Выход из проекта"]}, {"name": "Румянцево", "date": "22.12.2023", "share": "50", "status": ["Формирование концепции"], "invested": [["Безнал", "25 755 000"], ["Нал", "7 508 450"]], "fin": [["Приведённая стоимость (безнал+нал)", "43 416 250"], ["Объём финансирования до конца года", "35 866 338"], ["Плановый фин. результат", "—"]], "problems": ["Ежеквартальные штрафы 17 млн ₽ за отсутствие РНС", "Отсутствие эффективной бизнес-модели", "Невозможность использования проекта для зачёта ВРИ по МПТ"], "strategy": ["Продажа проекта", "Выход из проекта с убытками"]}, {"name": "Баллистика", "date": "06.12.2024", "share": "100", "status": [], "invested": [["Безнал", "24 047 697,6"], ["Нал", "9 253 300"]], "fin": [["Приведённая стоимость (безнал+нал)", "40 745 048"], ["Объём финансирования до конца года", "3 894 670"], ["Плановый фин. результат", "—"]], "problems": ["Отсутствие эффективной бизнес-модели"], "strategy": ["Продажа проекта в рынок", "Продажа проекта как инструмент по расчётам с «Основой»"]}, {"name": "Ред 7", "date": "12.08.2019", "share": "25", "status": [], "invested": [["Безнал", "525 000 000"]], "fin": [["Приведённая стоимость (безнал+нал)", "1 101 479 725"], ["Остаток денег к получению", "414 000 000"], ["Плановый фин. результат", "747 400 000"]], "problems": ["Отсутствие контроля за проектом"], "strategy": ["Продажа долей через зачёт по «Гудзону» и метры в «Эмоушен»"]}, {"name": "Эмоушен", "date": "01.02.2022", "share": "", "status": [], "invested": [["Безнал", "600 029 568"]], "fin": [["Приведённая стоимость (безнал+нал)", "1 048 031 607"], ["Плановый фин. результат", "293 000 000"]], "problems": ["Отсутствие контроля за проектом"], "strategy": ["Продажа долей по условиям опциона (право действует с 01.01.2026)"]}, {"name": "Горбунова", "date": "20.11.2023", "share": "", "status": [], "invested": [["Безнал", "111 362 470"]], "fin": [["Приведённая стоимость (безнал+нал)", "150 909 110"], ["Плановый фин. результат", "137 000 000"]], "problems": ["Отсутствие контроля за проектом"], "strategy": ["Оценка перспектив владения и принятие решения о продаже"]}, {"name": "Одинцово", "date": "08.08.2024", "share": "30", "status": [], "invested": [["Безнал", "249 698 361"]], "fin": [["Приведённая стоимость (безнал+нал)", "329 394 321"], ["Плановый фин. результат", "105 000 000"]], "problems": ["Отсутствие контроля за проектом"], "strategy": ["Продажа долей через зачёт по «Гудзону» и денежные средства (≈140 млн ₽)"]}, {"name": "МС 4", "date": "05.11.2024", "share": "70", "status": [], "invested": [["Безнал", "500 000 000"], ["Нал", "21 272 180"]], "fin": [["Приведённая стоимость (безнал+нал)", "670 489 732"], ["Плановый фин. результат", "1 547 000 000"], ["Кредит с учётом %", "504 205 439"]], "problems": [], "strategy": []}, {"name": "Нескучный сад", "date": "31.01.2025", "share": "100", "status": [], "invested": [["Безнал", "847 299 980"], ["Нал", "120 543 088"]], "fin": [["Приведённая стоимость (безнал+нал)", "1 093 387 572"], ["Плановое финансирование до конца года", "610 458 953"]], "problems": [], "strategy": []}, {"name": "Вешки", "date": "27.02.2024", "share": "24", "status": [], "invested": [["Безнал", "222 881 489"], ["Нал", "250 242 000"]], "fin": [["Приведённая стоимость (безнал+нал)", "650 762 079"], ["Полученные средства", "350 000 000"], ["Плановые средства к поступлению", "650 000 000"]], "problems": [], "strategy": []}, {"name": "Южный берег", "date": "23.03.2022", "share": "50", "status": ["Проект заморожен"], "invested": [["Безнал", "100 010 000"], ["Нал", "200 335 800"]], "fin": [["Приведённая стоимость (безнал+нал)", "475 631 661"]], "problems": [], "strategy": []}, {"name": "Правокумка / Сады Бештау", "date": "19.06.2025", "share": "", "status": [], "invested": [["Безнал", "737 381 255"], ["Нал", "167 811 825"]], "fin": [["Приведённая стоимость (безнал+нал)", "940 880 620"], ["Полученные средства", "50 000 000"], ["Плановые средства к поступлению", "750 000 000"]], "problems": [], "strategy": []}, {"name": "Родина", "date": "17.10.2024", "share": "", "status": [], "invested": [["Безнал", "300 000 000"], ["Нал", "14 000 617"]], "fin": [["Приведённая стоимость (безнал+нал)", "391 009 885"]], "problems": [], "strategy": []}, {"name": "Митпром", "date": "30.04.2025", "share": "", "status": [], "invested": [["Безнал", "9 999"], ["Нал", "41 186 946"]], "fin": [["Приведённая стоимость (безнал+нал)", "43 447 561"]], "problems": [], "strategy": []}, {"name": "Охотохозяйства", "date": "", "share": "", "status": [], "invested": [["Безнал", "200 640 555"], ["Нал", "2 629 311 743"]], "fin": [["Приведённая стоимость (безнал+нал)", "2 986 787 411"]], "problems": [], "strategy": []}, {"name": "Автосалон", "date": "09.03.2023", "share": "", "status": [], "invested": [["Безнал", "122 616 670"], ["Нал", "31 906 500"]], "fin": [["Приведённая стоимость (безнал+нал)", "219 365 512"]], "problems": [], "strategy": ["Продажа актива"]}, {"name": "Севен санс", "date": "02.11.2024", "share": "", "status": [], "invested": [["Нал", "330 000 000"]], "fin": [["Приведённая стоимость (безнал+нал)", "424 381 286"]], "problems": [], "strategy": []}, {"name": "Пелискер", "date": "", "share": "", "status": [], "invested": [], "fin": [], "problems": [], "strategy": []}, {"name": "Генстрой", "date": "", "share": "", "status": [], "invested": [], "fin": [], "problems": [], "strategy": []}, {"name": "Азимут", "date": "", "share": "", "status": [], "invested": [], "fin": [], "problems": [], "strategy": []}, {"name": "Куранты групп", "date": "", "share": "", "status": [], "invested": [], "fin": [], "problems": [], "strategy": []}];
+const TOTAL = CARDS.length;
+const FIELDS = ['sovet','kurator','ruk','instr'];
+const FLABEL = {sovet:'Совет директоров',kurator:'Куратор',ruk:'Руководитель БЕ',instr:'Инструмент управления'};
+const FSHORT = {sovet:'Совет',kurator:'Куратор',ruk:'Руководитель',instr:'Инструмент'};
+const FPH = {sovet:'есть / нет',kurator:'есть / нет, кто',ruk:'есть / нет, кто'};
+const INSTR = ['—','1 — Годовой бюджет','2 — Ежемесячный отчёт','3 — Стратегия + куратор','4 — Инвестпроект (KPI)'];
+const LS_KEY = 'bu_gov_v3';
+
+/* ---------- state (+ миграция с прошлой версии) ---------- */
+let state = {};
+try{
+  state = JSON.parse(localStorage.getItem(LS_KEY)||'null');
+  if(!state){ state = JSON.parse(localStorage.getItem('bu_gov_v2')||'{}')||{}; }
+}catch(e){ state={}; }
+
+let ui = { q:'', filter:'all', sort:'default', mxCol:'c' };
+
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let saveT=null;
+function saveNow(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} showToast(); }
+function persist(){ clearTimeout(saveT); saveT=setTimeout(saveNow,300); }
+function entry(i){ if(!state[i]) state[i]={}; return state[i]; }
+function gv(i,k){ return (state[i]&&state[i][k])||''; }
+function sv(i,k,v){ entry(i)[k]=v; persist(); }
+function PR(i){ return (state[i]&&state[i].p)? state[i].p : CARDS[i]; }
+function PE(i){ entry(i); if(!state[i].p) state[i].p=JSON.parse(JSON.stringify(CARDS[i])); return state[i].p; }
+
+function isAbsent(v){ v=(v||'').trim().toLowerCase();
+  return v==='' || ['нет','no','-','–','—','0','отсутствует','не назначен','нет совета'].includes(v); }
+function curCount(i){ let n=0; for(const f of FIELDS){ if(!isAbsent(gv(i,'c_'+f))) n++; } return n; }
+function targetCount(i){ let n=0; for(const f of FIELDS){ if(!isAbsent(gv(i,'t_'+f))) n++; } return n; }
+
+/* ---------- числа и деньги ---------- */
+function parseNum(s){ if(s==null) return NaN;
+  s=String(s).replace(/[\s  ]/g,'').replace('−','-').replace(',','.');
+  const m=s.match(/-?\d+(\.\d+)?/); return m?parseFloat(m[0]):NaN; }
+function cardValue(i){ const p=PR(i);
+  for(const pr of (p.fin||[])){ if((pr[0]||'').toLowerCase().includes('приведённая')||(pr[0]||'').toLowerCase().includes('приведенная')){
+    const n=parseNum(pr[1]); if(!isNaN(n)) return n; } }
+  let s=0,any=false; for(const pr of (p.invested||[])){ const n=parseNum(pr[1]); if(!isNaN(n)){s+=n;any=true;} }
+  return any?s:NaN; }
+function cardInvested(i){ let s=0,any=false;
+  for(const pr of (PR(i).invested||[])){ const n=parseNum(pr[1]); if(!isNaN(n)){s+=n;any=true;} }
+  return any?s:NaN; }
+function fmtMoney(n){ if(isNaN(n)) return '—';
+  const neg=n<0; n=Math.abs(n); let s;
+  if(n>=1e9) s=(n/1e9).toFixed(2).replace('.',',')+' млрд ₽';
+  else if(n>=1e6) s=(n/1e6).toFixed(1).replace('.',',')+' млн ₽';
+  else s=Math.round(n).toLocaleString('ru-RU')+' ₽';
+  return (neg?'−':'')+s; }
+
+function isSale(i){ return (PR(i).strategy||[]).join(' ').toLowerCase().includes('продаж'); }
+function isMinority(i){ const p=PR(i); const sh=parseFloat((p.share||'').replace(',','.')); return !!p.share&&sh<50; }
+function isEmptyPassport(i){ const p=PR(i);
+  return !(p.invested||[]).length && !(p.fin||[]).length && !(p.status||[]).length && !(p.problems||[]).length; }
+function strategyClass(i){ const s=(PR(i).strategy||[]).join(' ').toLowerCase();
+  if(!s.trim()) return 'none';
+  if(s.includes('продаж')) return 'sale';
+  if(s.includes('выход')) return 'exit';
+  return 'dev'; }
+
+let toastT=null;
+function showToast(){ const t=document.getElementById('toast'); t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),900); }
+
+/* ---------- routing ---------- */
+function route(){
+  const h=location.hash||'';
+  const m=h.match(/#\/card\/(\d+)/);
+  renderTabs(h);
+  if(m){ renderDetail(parseInt(m[1],10)); }
+  else if(h.startsWith('#/matrix')){ renderMatrix(); }
+  else if(h.startsWith('#/analytics')){ renderAnalytics(); }
+  else { renderOverview(); }
+  window.scrollTo(0,0);
+}
+function renderTabs(h){
+  const t=[['','Обзор'],['#/matrix','Матрица'],['#/analytics','Аналитика']];
+  document.getElementById('tabs').innerHTML=t.map(([hash,lab])=>{
+    const on=(hash===''? (!h||h.startsWith('#/card')) : h.startsWith(hash));
+    return '<button class="tab'+(on?' on':'')+'" onclick="location.hash=\''+hash+'\'">'+lab+'</button>';
+  }).join('');
+}
+
+/* ---------- ОБЗОР ---------- */
+const FILTERS=[
+  ['all','Все'],['noKur','Без куратора'],['noBoard','Без совета'],['noInstr','Без инструмента'],
+  ['minority','Доля < 50%'],['sale','На продажу'],['tDone','Целевая задана'],['emptyP','Пустой паспорт']
+];
+function passFilter(i,f){
+  switch(f){
+    case 'noKur': return isAbsent(gv(i,'c_kurator'));
+    case 'noBoard': return isAbsent(gv(i,'c_sovet'));
+    case 'noInstr': return isAbsent(gv(i,'c_instr'));
+    case 'minority': return isMinority(i);
+    case 'sale': return isSale(i);
+    case 'tDone': return targetCount(i)>=4;
+    case 'emptyP': return isEmptyPassport(i);
+    default: return true;
+  }
+}
+function visibleIdx(){
+  let idx=CARDS.map((c,i)=>i);
+  const q=ui.q.trim().toLowerCase();
+  if(q) idx=idx.filter(i=>PR(i).name.toLowerCase().includes(q));
+  idx=idx.filter(i=>passFilter(i,ui.filter));
+  if(ui.sort==='value') idx.sort((a,b)=>(isNaN(cardValue(b))?-1:cardValue(b))-(isNaN(cardValue(a))?-1:cardValue(a)));
+  else if(ui.sort==='name') idx.sort((a,b)=>PR(a).name.localeCompare(PR(b).name,'ru'));
+  else if(ui.sort==='progress') idx.sort((a,b)=>(targetCount(b)+curCount(b))-(targetCount(a)+curCount(a)));
+  return idx;
+}
+function setQ(v){ ui.q=v; refreshGrid(); }
+function setFilter(f){ ui.filter=(ui.filter===f?'all':f); renderOverview(true); }
+function setSort(v){ ui.sort=v; refreshGrid(); }
+function refreshGrid(){
+  const idx=visibleIdx();
+  document.getElementById('gridbox').innerHTML = idx.length
+    ? '<div class="grid">'+idx.map(i=>miniCard(i)).join('')+'</div>'
+    : '<div class="empty-res">Ничего не найдено. Измените запрос или фильтр.</div>';
+  document.getElementById('cnt').textContent='Показано: '+idx.length+' из '+TOTAL;
+  FILTERS.forEach(([f])=>{ const el=document.getElementById('ch_'+f); if(el) el.classList.toggle('on',ui.filter===f); });
+}
+
+function renderOverview(keepScroll){
+  const N=TOTAL;
+  let noBoard=0,noCur=0,noRuk=0,noInstr=0,targDone=0,started=0,minority=0,forSale=0,totVal=0;
+  CARDS.forEach((c,i)=>{
+    if(isAbsent(gv(i,'c_sovet'))) noBoard++;
+    if(isAbsent(gv(i,'c_kurator'))) noCur++;
+    if(isAbsent(gv(i,'c_ruk'))) noRuk++;
+    if(isAbsent(gv(i,'c_instr'))) noInstr++;
+    if(targetCount(i)>=4) targDone++;
+    let any=false; FIELDS.forEach(f=>{ if(!isAbsent(gv(i,'c_'+f))||!isAbsent(gv(i,'t_'+f))) any=true; }); if(any) started++;
+    if(isMinority(i)) minority++;
+    if(isSale(i)) forSale++;
+    const v=cardValue(i); if(!isNaN(v)) totVal+=v;
+  });
+  const st=(cls,val,lab,f)=>'<div class="stat '+cls+(f&&ui.filter===f?' active':'')+'"'
+    +(f?' id="st_'+f+'" onclick="setFilter(\''+f+'\')" title="Нажмите, чтобы отфильтровать карточки"':'')
+    +'><b>'+val+'</b><span>'+lab+'</span></div>';
+  document.getElementById('app').innerHTML =
+    '<div class="pagehead"><div class="kicker">Стратегическая сессия совета директоров</div>'
+    +'<h1>Система управления <span class="a">портфелем</span> бизнес-единиц</h1>'
+    +'<p class="sub">'+N+' активов, приведённая стоимость портфеля — <b>'+fmtMoney(totVal)+'</b>. '
+    +'Нажмите карточку, чтобы открыть паспорт и модель управления. Все правки сохраняются автоматически.</p></div>'
+    +'<div class="sec-h">Пробелы управления — по колонке «Текущее»</div>'
+    +'<div class="dash">'
+    +st('bad',noBoard+' <small>/ '+N+'</small>','без совета директоров','noBoard')
+    +st('bad',noCur+' <small>/ '+N+'</small>','без куратора','noKur')
+    +st('bad',noRuk+' <small>/ '+N+'</small>','без руководителя БЕ',null)
+    +st('bad',noInstr+' <small>/ '+N+'</small>','без инструмента управления','noInstr')
+    +'</div>'
+    +'<div class="dash-note">Пусто = «не назначено». По мере заполнения колонки «Текущее» цифры уменьшаются. Клик по плитке — фильтр.</div>'
+    +'<div class="sec-h">Прогресс и контекст портфеля</div>'
+    +'<div class="dash">'
+    +st('good',targDone+' <small>/ '+N+'</small>','целевая модель задана','tDone')
+    +st('neut',started+' <small>/ '+N+'</small>','в работе',null)
+    +st('neut',String(minority),'доля &lt; 50% (миноритарные)','minority')
+    +st('acc',String(forSale),'в стратегии — продажа','sale')
+    +'</div>'
+    +'<div class="sec-h">Бизнес-единицы</div>'
+    +'<div class="controls">'
+    +'<div class="search"><span class="ic">⌕</span><input type="text" placeholder="Поиск по названию…" value="'+esc(ui.q)+'" oninput="setQ(this.value)"></div>'
+    +'<div class="chips">'+FILTERS.map(([f,l])=>'<button class="chip'+(ui.filter===f?' on':'')+'" id="ch_'+f+'" onclick="setFilter(\''+f+'\')">'+l+'</button>').join('')+'</div>'
+    +'<select class="sort" onchange="setSort(this.value)">'
+    +'<option value="default"'+(ui.sort==='default'?' selected':'')+'>Порядок: исходный</option>'
+    +'<option value="value"'+(ui.sort==='value'?' selected':'')+'>По стоимости ↓</option>'
+    +'<option value="progress"'+(ui.sort==='progress'?' selected':'')+'>По прогрессу ↓</option>'
+    +'<option value="name"'+(ui.sort==='name'?' selected':'')+'>По алфавиту</option>'
+    +'</select></div>'
+    +'<div class="count-note" id="cnt"></div>'
+    +'<div id="gridbox"></div>'
+    +'<div class="foot">Данные хранятся в этом браузере (автосохранение). Резерв и перенос на другой компьютер — кнопка «Экспорт» наверху. Кнопка «Очистить»: '
+    +'<button class="btn ghost" style="padding:2px 8px;font-size:12px" onclick="doReset()">сбросить все правки</button></div>';
+  refreshGrid();
+}
+
+function miniCard(i){
+  const c=PR(i); const v=cardValue(i);
+  const strat=(c.strategy&&c.strategy.length)?c.strategy[0]:'Стратегия не определена';
+  const cc=curCount(i), tc=targetCount(i);
+  let badges='';
+  if(c.share) badges+='<span class="badge share'+(isMinority(i)?' min':'')+'">Доля '+esc(c.share)+'%</span>';
+  if(isSale(i)) badges+='<span class="badge sale">На продажу</span>';
+  if(isEmptyPassport(i)) badges+='<span class="badge empty">Паспорт не заполнен</span>';
+  let pips=''; FIELDS.forEach(f=>{
+    const t=!isAbsent(gv(i,'t_'+f)), cur=!isAbsent(gv(i,'c_'+f));
+    pips+='<span class="pip'+(t?' t':(cur?' c':''))+'" title="'+FSHORT[f]+': '+(t?'целевое задано':(cur?'текущее заполнено':'пусто'))+'"></span>'; });
+  return '<div class="mini" onclick="location.hash=\'#/card/'+i+'\'">'
+    +'<div class="idx">'+String(i+1).padStart(2,'0')+' / '+TOTAL+'</div>'
+    +'<h3>'+esc(c.name)+'</h3>'
+    +'<div class="val">'+fmtMoney(v)+'</div>'
+    +(badges?'<div class="badges">'+badges+'</div>':'')
+    +'<div class="row">Вход в проект&nbsp; <b>'+esc(c.date||'—')+'</b></div>'
+    +'<div class="strat">'+esc(strat)+'</div>'
+    +'<div class="govbar"><span>Управление: '+tc+'/4 целевое</span><span class="pips">'+pips+'</span></div></div>';
+}
+
+/* ---------- РЕДАКТИРОВАНИЕ ПАСПОРТА ---------- */
+function setP(el){ PE(+el.dataset.i)[el.dataset.k]=el.textContent.trim(); persist(); }
+function readList(ul){ return [...ul.querySelectorAll('.eli > .etext')].map(s=>s.textContent.trim()).filter(x=>x.length); }
+function setList(span){ const ul=span.closest('ul'); PE(+ul.dataset.i)[ul.dataset.k]=readList(ul); persist(); }
+function delItem(btn){ const ul=btn.closest('ul'); btn.closest('.eli').remove();
+  PE(+ul.dataset.i)[ul.dataset.k]=readList(ul); persist(); }
+function addItem(btn){ const wrap=btn.closest('.editfield'); const ul=wrap.querySelector('ul');
+  const li=document.createElement('li'); li.className='eli';
+  li.innerHTML='<span class="bullet">—</span><span class="etext ed" contenteditable data-ph="новый пункт" oninput="setList(this)"></span><button class="del" onclick="delItem(this)" title="удалить">×</button>';
+  ul.appendChild(li); li.querySelector('.etext').focus(); }
+function readPairs(box){ return [...box.querySelectorAll('.epair')].map(p=>[
+  p.querySelector('.epl').textContent.trim(), p.querySelector('.epv').textContent.trim()]).filter(x=>x[0]||x[1]); }
+function setPairs(span){ const box=span.closest('.epairs'); PE(+box.dataset.i)[box.dataset.k]=readPairs(box); persist(); }
+function delPair(btn){ const box=btn.closest('.epairs'); btn.closest('.epair').remove();
+  PE(+box.dataset.i)[box.dataset.k]=readPairs(box); persist(); }
+function addPair(btn){ const box=btn.closest('.editfield').querySelector('.epairs');
+  const row=document.createElement('div'); row.className='epair';
+  row.innerHTML='<span class="epl ed" contenteditable data-ph="показатель" oninput="setPairs(this)"></span>'
+    +'<span class="epv ed" contenteditable data-ph="значение" oninput="setPairs(this)"></span>'
+    +'<button class="del" onclick="delPair(this)">×</button>';
+  box.appendChild(row); row.querySelector('.epl').focus(); }
+
+/* ---------- ДЕТАЛЬНАЯ КАРТОЧКА ---------- */
+function edSpan(i,k,val,ph){ return '<span class="ed" contenteditable spellcheck="false" data-i="'+i+'" data-k="'+k
+  +'" data-ph="'+esc(ph||'')+'" oninput="setP(this)">'+esc(val||'')+'</span>'; }
+function listField(i,k,arr,ph){
+  let s='<div class="editfield"><ul class="elist" data-i="'+i+'" data-k="'+k+'">';
+  (arr||[]).forEach(x=>{ s+='<li class="eli"><span class="bullet">—</span>'
+    +'<span class="etext ed" contenteditable spellcheck="false" data-ph="'+esc(ph)+'" oninput="setList(this)">'+esc(x)+'</span>'
+    +'<button class="del" onclick="delItem(this)" title="удалить">×</button></li>'; });
+  s+='</ul><button class="add" onclick="addItem(this)">+ добавить</button></div>'; return s;
+}
+function pairsField(i,k,arr){
+  let s='<div class="editfield"><div class="epairs" data-i="'+i+'" data-k="'+k+'">';
+  (arr||[]).forEach(p=>{ s+='<div class="epair">'
+    +'<span class="epl ed" contenteditable spellcheck="false" data-ph="показатель" oninput="setPairs(this)">'+esc(p[0])+'</span>'
+    +'<span class="epv ed" contenteditable spellcheck="false" data-ph="значение" oninput="setPairs(this)">'+esc(p[1])+'</span>'
+    +'<button class="del" onclick="delPair(this)">×</button></div>'; });
+  s+='</div><button class="add" onclick="addPair(this)">+ строка</button></div>'; return s;
+}
+function cellInput(i,col,f){ const key=col+'_'+f; const v=gv(i,key);
+  if(f==='instr'){ let o=''; if(!v) o='<option selected></option>';
+    INSTR.forEach(opt=>{ o+='<option'+(opt===v?' selected':'')+'>'+esc(opt)+'</option>'; });
+    return '<select class="cell" onchange="sv('+i+',\''+key+'\',this.value)">'+o+'</select>'; }
+  return '<input class="cell" type="text" value="'+esc(v)+'" placeholder="'+esc(FPH[f]||'')
+    +'" oninput="sv('+i+',\''+key+'\',this.value)">';
+}
+
+function renderDetail(i){
+  const c=PR(i); if(!c){ location.hash=''; return; }
+  const gen='<div class="kv">Дата входа&nbsp; <b>'+edSpan(i,'date',c.date,'дата')+'</b></div>'
+    +'<div class="kv">Доля в проекте&nbsp; <b>'+edSpan(i,'share',c.share,'—')+'</b> %</div>'
+    +'<div class="lbl">Текущий статус</div>'+listField(i,'status',c.status,'статус');
+  const fin='<div class="lbl" style="margin-top:0">Вложенные средства</div>'
+    +pairsField(i,'invested',c.invested)
+    +'<div class="lbl">Финансовые показатели</div>'
+    +pairsField(i,'fin',c.fin);
+  const passport='<div class="panel"><div class="cols">'
+    +'<div class="sec"><h4>Общая информация</h4>'+gen+'</div>'
+    +'<div class="sec"><h4>Финансовая информация</h4>'+fin+'</div>'
+    +'<div class="divider"></div>'
+    +'<div class="sec"><h4>Проблемные вопросы</h4>'+listField(i,'problems',c.problems,'вопрос')+'</div>'
+    +'<div class="sec"><h4>Стратегия по проекту</h4>'+listField(i,'strategy',c.strategy,'действие')+'</div>'
+    +'</div></div>';
+  let rows=''; FIELDS.forEach(f=>{ rows+='<tr><td class="lab">'+esc(FLABEL[f])+'</td>'
+    +'<td>'+cellInput(i,'c',f)+'</td><td class="col-target">'+cellInput(i,'t',f)+'</td></tr>'; });
+  const gov='<div class="panel"><div class="gov"><h4>Система управления</h4>'
+    +'<div class="hint">«Как есть» → «как должно быть»</div>'
+    +'<table class="gov-t"><thead><tr><th></th><th>Текущее</th><th class="t">Целевое</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="legend"><div class="lh">Инструменты управления (для строки 4)</div><ol>'
+    +'<li>Годовой бюджет — защита и утверждение на СД</li>'
+    +'<li>Ежемесячный отчёт об исполнении бюджета</li>'
+    +'<li>Стратегия на период + контроль куратора</li>'
+    +'<li>Инвестпроект — KPI в числах, доступ к фин. отчётности</li></ol></div>'
+    +'<div style="margin-top:16px"><div class="lh">Заметки сессии</div>'
+    +'<textarea class="note" placeholder="Решения, ответственные, сроки..." oninput="sv('+i+',\'notes\',this.value)">'+esc(gv(i,'notes'))+'</textarea></div>'
+    +'</div></div>';
+  document.getElementById('app').innerHTML =
+    '<button class="back" onclick="location.hash=\'\'">← Все бизнес-единицы</button>'
+    +'<div class="dhead"><div><div class="kicker">Бизнес-единица '+String(i+1).padStart(2,'0')+' / '+TOTAL
+    +' &nbsp;·&nbsp; '+fmtMoney(cardValue(i))+'</div>'
+    +'<h2 class="ed" contenteditable spellcheck="false" data-i="'+i+'" data-k="name" data-ph="название" oninput="setP(this)">'+esc(c.name)+'</h2></div>'
+    +'<div class="tb-actions">'
+    +'<button class="btn" onclick="nav('+i+',-1)">← Пред.</button>'
+    +'<button class="btn" onclick="nav('+i+',1)">След. →</button>'
+    +'<button class="btn primary" onclick="window.print()">Печать / PDF</button></div></div>'
+    +'<p class="edithint"><b>Подсказка:</b> любое поле паспорта редактируется — кликните по нему. Стрелки ← → на клавиатуре листают карточки.</p>'
+    +'<div class="layout">'+passport+gov+'</div>'
+    +'<div class="savebar">✓ Всё сохраняется автоматически в этом браузере. Резервная копия — «Экспорт» наверху.</div>';
+}
+function nav(i,d){ location.hash='#/card/'+((i+d+TOTAL)%TOTAL); }
+
+/* ---------- МАТРИЦА ---------- */
+function setMxCol(c){ ui.mxCol=c; renderMatrix(); }
+function mxChip(i,f){
+  const col=ui.mxCol; const v=gv(i,col+'_'+f);
+  if(isAbsent(v)) return '<span class="cellchip no">нет</span>';
+  return '<span class="cellchip '+(col==='t'?'tg':'yes')+'" title="'+esc(v)+'">'+esc(v)+'</span>';
+}
+function renderMatrix(){
+  const col=ui.mxCol;
+  let gaps=0;
+  let rows=CARDS.map((c,i)=>{
+    const p=PR(i); const tc=targetCount(i);
+    FIELDS.forEach(f=>{ if(isAbsent(gv(i,'c_'+f))) gaps++; });
+    return '<tr class="row" onclick="location.hash=\'#/card/'+i+'\'">'
+      +'<td style="color:var(--lgray);font-size:11.5px">'+String(i+1).padStart(2,'0')+'</td>'
+      +'<td class="name">'+esc(p.name)+'</td>'
+      +'<td class="c">'+(p.share?esc(p.share)+'%':'—')+'</td>'
+      +'<td class="num">'+fmtMoney(cardValue(i))+'</td>'
+      +FIELDS.map(f=>'<td class="c">'+mxChip(i,f)+'</td>').join('')
+      +'<td><div class="prgcell"><div class="prgbar"><i style="width:'+(tc/4*100)+'%"></i></div><span style="font-size:11.5px;color:var(--gray)">'+tc+'/4</span></div></td>'
+      +'</tr>';
+  }).join('');
+  document.getElementById('app').innerHTML =
+    '<div class="pagehead"><div class="kicker">Сводная матрица портфеля</div>'
+    +'<h1>Все бизнес-единицы <span class="a">одним взглядом</span></h1>'
+    +'<p class="sub">Диагноз портфеля: '+gaps+' незакрытых позиций управления из '+(TOTAL*4)+' (по колонке «Текущее»). '
+    +'Строка — переход в карточку. Печать — кнопка наверху.</p></div>'
+    +'<div class="controls"><div class="mx-toggle">'
+    +'<button class="'+(col==='c'?'on':'')+'" onclick="setMxCol(\'c\')">Текущее состояние</button>'
+    +'<button class="'+(col==='t'?'on':'')+'" onclick="setMxCol(\'t\')">Целевая модель</button>'
+    +'</div></div>'
+    +'<div class="mx-wrap"><table class="mx"><thead><tr>'
+    +'<th>№</th><th>Бизнес-единица</th><th class="c">Доля</th><th style="text-align:right">Стоимость</th>'
+    +FIELDS.map(f=>'<th class="c">'+FSHORT[f]+'</th>').join('')
+    +'<th>Целевое</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div class="mx-note">«нет» — позиция не назначена (пустая ячейка приравнивается к «нет»). Заполняются в карточке БЕ; матрица обновляется автоматически.</div>';
+}
+
+/* ---------- АНАЛИТИКА ---------- */
+function donutSVG(parts,size){
+  const R=(size-22)/2, C=size/2, len=2*Math.PI*R;
+  const total=parts.reduce((s,p)=>s+p.v,0)||1;
+  let off=len*0.25, s='<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">';
+  parts.forEach(p=>{ const d=len*p.v/total;
+    s+='<circle cx="'+C+'" cy="'+C+'" r="'+R+'" fill="none" stroke="'+p.c+'" stroke-width="20" '
+      +'stroke-dasharray="'+Math.max(d-1.5,0)+' '+(len-Math.max(d-1.5,0))+'" stroke-dashoffset="'+off+'" stroke-linecap="butt"/>';
+    off-=d; });
+  s+='<text x="'+C+'" y="'+(C-3)+'" text-anchor="middle" font-size="26" font-weight="800" fill="#1B2233">'+TOTAL+'</text>'
+    +'<text x="'+C+'" y="'+(C+17)+'" text-anchor="middle" font-size="11" fill="#949DB2">активов</text></svg>';
+  return s;
+}
+function renderAnalytics(){
+  let totVal=0, totInv=0;
+  const vals=CARDS.map((c,i)=>({i,name:PR(i).name,v:cardValue(i)}));
+  vals.forEach(x=>{ if(!isNaN(x.v)) totVal+=x.v; });
+  CARDS.forEach((c,i)=>{ const n=cardInvested(i); if(!isNaN(n)) totInv+=n; });
+  const sorted=vals.filter(x=>!isNaN(x.v)&&x.v>0).sort((a,b)=>b.v-a.v);
+  const maxV=sorted.length?sorted[0].v:1;
+  const bars=sorted.map(x=>'<div class="hbar">'
+    +'<span class="nm" onclick="location.hash=\'#/card/'+x.i+'\'" title="Открыть карточку">'+esc(x.name)+'</span>'
+    +'<div class="tr"><i style="width:'+(x.v/maxV*100).toFixed(1)+'%"></i></div>'
+    +'<span class="vl">'+fmtMoney(x.v)+'</span></div>').join('');
+  // стратегии
+  const SC={sale:{n:0,c:'#C0392B',l:'Продажа / выход в деньги'},exit:{n:0,c:'#B07714',l:'Выход из проекта'},
+            dev:{n:0,c:'#2456C0',l:'Развитие / запуск'},none:{n:0,c:'#C7CDDA',l:'Стратегия не определена'}};
+  CARDS.forEach((c,i)=>SC[strategyClass(i)].n++);
+  const parts=Object.values(SC).filter(p=>p.n>0).map(p=>({v:p.n,c:p.c}));
+  const legend=Object.values(SC).map(p=>'<div class="li"><span class="sw" style="background:'+p.c+'"></span>'
+    +p.l+'&nbsp;—&nbsp;<b>'+p.n+'</b></div>').join('');
+  // покрытие управления
+  const cov=FIELDS.map(f=>{ let cur=0,tgt=0;
+    CARDS.forEach((c,i)=>{ if(!isAbsent(gv(i,'c_'+f)))cur++; if(!isAbsent(gv(i,'t_'+f)))tgt++; });
+    return {f,cur,tgt}; });
+  const covRows=cov.map(x=>'<div class="covrow"><div class="cl"><span>'+FLABEL[x.f]+'</span>'
+    +'<span><b>'+x.cur+'</b> тек. / <b style="color:var(--target)">'+x.tgt+'</b> цел. из '+TOTAL+'</span></div>'
+    +'<div class="covtr"><span class="cur" style="width:'+(x.cur/TOTAL*100)+'%"></span>'
+    +'<span class="tgt" style="width:'+(Math.max(x.tgt-x.cur,0)/TOTAL*100)+'%"></span></div></div>').join('');
+  const st=(cls,val,lab)=>'<div class="stat '+cls+'" style="cursor:default"><b>'+val+'</b><span>'+lab+'</span></div>';
+  document.getElementById('app').innerHTML =
+    '<div class="pagehead"><div class="kicker">Аналитика портфеля</div>'
+    +'<h1>Портфель <span class="a">в цифрах</span></h1>'
+    +'<p class="sub">Расчёты выполняются по актуальным данным паспортов — с учётом ваших правок.</p></div>'
+    +'<div class="dash" style="margin-bottom:18px">'
+    +st('acc',fmtMoney(totVal),'приведённая стоимость портфеля')
+    +st('neut',fmtMoney(totInv),'вложено средств (безнал + нал)')
+    +st('neut',String(TOTAL),'бизнес-единиц в портфеле')
+    +st('good',fmtMoney(totVal-totInv),'прирост к вложенному')
+    +'</div>'
+    +'<div class="an-grid">'
+    +'<div class="panel"><div class="chart-h">Приведённая стоимость по активам</div>'
+    +'<div class="chart-sub">По убыванию. Клик по названию — переход в карточку.</div>'+bars
+    +'<div class="an-note">Активы без финансовых данных не отображаются.</div></div>'
+    +'<div>'
+    +'<div class="panel" style="margin-bottom:18px"><div class="chart-h">Стратегии по портфелю</div>'
+    +'<div class="chart-sub">Классификация по первой строке стратегии</div>'
+    +'<div class="donut-box">'+donutSVG(parts,170)+'<div class="dleg">'+legend+'</div></div></div>'
+    +'<div class="panel"><div class="chart-h">Покрытие системы управления</div>'
+    +'<div class="chart-sub">Сколько БЕ закрыто по каждой позиции</div>'+covRows
+    +'<div class="an-note">Синее — заполнено «Текущее», бирюзовое — дополнительно задано «Целевое».</div></div>'
+    +'</div></div>';
+}
+
+/* ---------- экспорт / импорт / сброс ---------- */
+function doExport(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  const d=new Date().toISOString().slice(0,10);
+  a.download='управление_БЕ_'+d+'.json'; a.click(); URL.revokeObjectURL(a.href); }
+function doImport(ev){ const f=ev.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ state=JSON.parse(r.result)||{}; saveNow(); route(); }catch(e){ alert('Не удалось прочитать файл'); } };
+  r.readAsText(f); ev.target.value=''; }
+function doReset(){ if(confirm('Очистить все правки и заполнение? Исходные паспорта вернутся в начальный вид.')){ state={}; saveNow(); route(); } }
+
+/* ---------- клавиатура ---------- */
+document.addEventListener('keydown',e=>{
+  const m=(location.hash||'').match(/#\/card\/(\d+)/); if(!m) return;
+  const tag=(document.activeElement&&document.activeElement.tagName)||'';
+  if(['INPUT','TEXTAREA','SELECT'].includes(tag)||document.activeElement.isContentEditable) return;
+  if(e.key==='ArrowLeft') nav(parseInt(m[1],10),-1);
+  if(e.key==='ArrowRight') nav(parseInt(m[1],10),1);
+  if(e.key==='Escape') location.hash='';
+});
+
+window.addEventListener('hashchange',route);
+route();
+</script>
+</body>
+</html>
